@@ -1,0 +1,12 @@
+#!/bin/bash
+# This script checks whether STS is running 
+MYPID=$$
+MYPATH="$(cd "$(dirname "$0")" && pwd)"
+MYREALPATH="$(dirname "$(readlink -f "$0")")"
+STSALIVE=$(ps -ef | grep sts.Main | grep -v grep > /dev/null 2>&1 && echo $?)
+if [ "$STSALIVE" = "0" ]; then
+	echo 1
+	exit
+fi
+echo 0
+exit

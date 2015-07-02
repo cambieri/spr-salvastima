@@ -1,0 +1,17 @@
+#!/bin/bash
+# This script starts STS
+MYPID=$$
+MYPATH="$(cd "$(dirname "$0")" && pwd)"
+MYREALPATH="$(dirname "$(readlink -f "$0")")"
+STSISON=`$MYREALPATH/sts_ison`
+if [ "$ISSTSON" = "1" ]; then
+	$MYREALPATH/sts_status
+else
+	MYDIR=`pwd`
+	cd $MYREALPATH >/dev/null 2>&1
+	echo `date` PID is $$
+	myCommand="java -classpath ./:../* it.cambieri.sts.Main &"
+	echo $myCommand
+	java -classpath ./:../* it.cambieri.sts.Main &
+	cd $MYDIR >/dev/null 2>&1
+fi

@@ -1,0 +1,97 @@
+#!/bin/bash
+#
+### BEGIN INIT INFO
+# Provides:          sts
+# Required-Start:    mysql
+# Required-Stop:     mysql
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start and stop the sts server daemon
+# Description:       Controls the sts daemon "stsd"
+#
+### END INIT INFO
+#
+#
+# chkconfig: 345 20 80
+# description: Start and stop the STS daemon
+# processname: sts
+
+DAEMON_PATH="/opt/sts/bin"
+
+DAEMON=stsd
+DAEMONOPTS=""
+
+NAME=sts
+DESC="Start and stop the STS daemon"
+PIDFILE=/var/run/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+
+case "$1" in
+	start)
+		### Create symbolic link for scripts
+		echo "Create symbolic link for scripts..."
+		chmod +x $DAEMON_PATH/stsd >/dev/null 2>&1
+		chmod +x $DAEMON_PATH/sts_* >/dev/null 2>&1
+		ln -s $DAEMON_PATH/sts /usr/local/bin >/dev/null 2>&1
+		ln -s $DAEMON_PATH/stsd /usr/local/bin >/dev/null 2>&1
+		ln -s $DAEMON_PATH/sts_* /usr/local/bin >/dev/null 2>&1
+		rm -f /usr/local/bin/sts_*~	
+		###
+		### Upgrade shared files
+		echo "Upgrade shared files..."
+		su cmb -c "mkdir /home/sts/shared >/dev/null 2>&1"
+		###
+		### Set STS for nunning
+		echo "Set STS for running..."
+		rm -f /home/sts/shared/STSON >/dev/null 2>&1
+		rm -f /home/sts/shared/STSCLOSE >/dev/null 2>&1
+		ISSTSON=`$DAEMON_PATH/sts_ison`
+		if [ "$ISSTSON" = "1" ]; then
+			echo "STS is already running"
+			exit 0
+		fi
+		###
+		### Run daemon (if it is not running)
+		echo "Run daemon (if it is not running)..."
+		COMMAND=stsd
+		RUNNING=`ps --no-headers -C${COMMAND} | wc -l`
+		if [ ${RUNNING} -lt 1 ]; then
+			su cmb -c $DAEMON_PATH/$COMMAND &
+		fi
+		###
+		echo "STS started"
+		exit 0
+		;;
+	status)
+		$DAEMON_PATH/sts_status
+		exit 0
+		;;
+	stop)
+		ISSTSON=`$DAEMON_PATH/sts_ison`
+		if [ "$ISSTSON" = "0" ]; then
+			echo "STS is not running"
+			exit 0
+		fi
+		if [ "$ISSTSON" = "1" ]; then
+			$DAEMON_PATH/sts_close			
+			kill -9 $(ps aux | grep '[s]ts.Main' | awk '{print $2}') >/dev/null 2>&1
+		fi		
+		rm -f /home/sts/shared/STSON >/dev/null 2>&1
+		echo "STS closed"
+		;;
+	restart)
+		ISSTSON=`$DAEMON_PATH/sts_ison`
+		if [ "ISSTSON" = "0" ]; then
+			echo "STS is not running"
+			exit 0
+		fi
+		$0 stop
+		$0 start
+		;;
+
+	*)
+	        echo "Usage: $0 {status|start|stop|restart}"
+        	exit 1
+esac

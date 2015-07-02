@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<it.cambieri.salvastima>
-	<settings id="1" description="Main Stima Store"
-		plcip="128.2.2.1" 
+<it.cambieri.sts>
+	<settings id="1" description="Main SPR Store"
+		plcip="192.168.99.101" 
 		plcport="2000" 
 		myport="2000" 
 		timeout="2000" 
-		directory="/home/val3xiv/public/salvagnini/"
+		directory="smb://192.168.1.102/sw_interface"
+		domain=""
+		user="syscon"
+		password="Enterprise"
 		requestfile="request01.ini"
 		requestsyn="request01.syn"
 		responsefile="response01.ini"
@@ -13,5 +16,6 @@
 		positionfile="pos_01.ini"
 		positionsyn="pos_01.syn"
 		downfile="down01.syn" 
+		sharedfolder="/home/sts/shared"
 	/>
-</it.cambieri.salvastima>
+</it.cambieri.sts>

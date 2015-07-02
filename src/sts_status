@@ -1,0 +1,16 @@
+#!/bin/bash
+# This script get the status of STS 
+MYPID=$$
+MYPATH="$(cd "$(dirname "$0")" && pwd)"
+MYREALPATH="$(dirname "$(readlink -f "$0")")"
+STSISON=`$MYREALPATH/sts_ison`
+. /etc/cmb.conf
+if [ "$CMBSTS" = "0" ]; then
+	STSSTATUS="not enabled"
+elif [ "$STSISON" = "0" ]; then
+	STSSTATUS="closed"
+else
+	STSSTATUS="running"
+fi
+echo "STS status is $STSSTATUS"
+exit

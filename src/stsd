@@ -1,0 +1,50 @@
+#!/bin/bash
+MYPID=$$
+MYPATH="$(cd "$(dirname "$0")" && pwd)"
+MYREALPATH="$(dirname "$(readlink -f "$0")")"
+STSLOG=/home/sts/log/sts.log
+STSDLOG=/home/sts/log/stsd.log
+MAXLOGSIZE=104857600	# 100 Mb
+SEC=0
+echo `date` PID is $$ >>$STSDLOG 2>&1
+rm -f /home/sts/shared/STSON >/dev/null 2>&1
+while true; do
+	### Zip log files
+	touch "$STSLOG" 2>/dev/null
+	touch "$STSDLOG" 2>/dev/null
+	LOGSIZE=$(wc -c 2>/dev/null <"$STSLOG")
+	LOGDSIZE=$(wc -c 2>/dev/null <"$STSDLOG")
+	if [ $LOGDSIZE -gt $LOGSIZE ]; then
+		LOGSIZE=$LOGDSIZE
+	fi
+	if [ $LOGSIZE -ge $MAXLOGSIZE ]; then
+		echo "`date` Prepare zip file with logs" >>$STSDLOG 2>&1
+		$MYREALPATH/sts_ziplog >>$STSDLOG 2>&1
+	fi
+	###
+	if [ -e /home/sts/shared/STSON ]; then
+		STSISON=1
+	else
+		STSISON=0
+	fi
+	. /etc/cmb.conf
+	if [ "$CMBSTS" = "0" ]; then
+		echo "`date` STS IS NOT ENABLED" >>$STSDLOG 2>&1
+	elif [ "$STSISON" = "1" ]; then			
+		echo "`date` STS is running" >>$STSDLOG 2>&1
+	else
+		if [ -e /home/sts/shared/STSCLOSE ]; then
+			echo "`date` STS is closed" >>$STSDLOG 2>&1
+		else
+			echo "`date` [STS not running] start STS for running" >>$STSDLOG 2>&1
+			$MYREALPATH/sts_start >>$STSLOG 2>&1
+			touch /home/sts/shared/STSON >/dev/null 2>&1
+		fi
+	fi
+	sleep 10
+	SEC=$((SEC+10))
+	if [ $SEC -gt 610 ]; then
+		SEC=0
+	fi
+done
+exit 0

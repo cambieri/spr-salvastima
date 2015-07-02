@@ -1,0 +1,30 @@
+#!/bin/bash
+# This script sends a ping to STS store
+MYPID=$$
+MYPATH="$(cd "$(dirname "$0")" && pwd)"
+MYREALPATH="$(dirname "$(readlink -f "$0")")"
+echo -n "sending ping to STS."
+if [ "$USER" = "cmb" ]; then
+	touch /home/sts/shared/STSPING
+else
+	su cmb -c "touch /home/sts/shared/STSPING"
+fi
+# Wait fifteen seconds for it to exit...
+for second in 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 15 ; do
+	echo -n "."
+	if [ ! -e "/home/sts/shared/STSPING" ]; then
+		break;
+	fi
+	sleep 1
+done
+if [ -e "/home/sts/shared/STSPING" ]; then
+	if [ "$USER" = "cmb" ]; then
+		rm -f /home/sts/shared/STSPING >/dev/null 2>&1
+	else
+		su cmb -c "rm -f /home/sts/shared/STSPING >/dev/null 2>&1"
+	fi
+	echo "."
+	echo "WARNING:  Ping was not received by STS!"
+else
+	echo " [sent]"
+fi

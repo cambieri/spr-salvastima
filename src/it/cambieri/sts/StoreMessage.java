@@ -1,6 +1,6 @@
-package it.cambieri.salvastima;
+package it.cambieri.sts;
 
-import it.cambieri.salvastima.Store.StoreState;
+import it.cambieri.sts.Store.StoreState;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

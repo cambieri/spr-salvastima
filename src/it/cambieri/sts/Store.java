@@ -1,4 +1,4 @@
-package it.cambieri.salvastima;
+package it.cambieri.sts;
 
 /**
  * This class rapresent a Stima storehouse.
@@ -60,13 +60,14 @@ public class Store {
 	private int myPortNumber;
 	private int timeout;
 	private StoreState state;
-	private boolean logEnabled;
+//	private boolean logEnabled;
+//	private String logFile;
 
 	/**
 	 * A default empty constructor.
 	 */
 	public Store() {
-		this(0, "", "", 0, 0, 0, StoreState.UNDEFINED, true);
+		this(0, "", "", 0, 0, 0, StoreState.UNDEFINED);
 	}
 
 	/**
@@ -79,11 +80,12 @@ public class Store {
 	 * @param pMyPortNumber
 	 * @param pTimeout
 	 * @param pState
-	 * @param logEnabled
+	 * @param pLogEnabled
+	 * @param pLogFile
 	 * 
 	 */
 	public Store(int pId, String pDescription, String pIp, int pPortNumber,
-			int pMyPortNumber, int pTimeout, StoreState pState, boolean pLogEnabled) {
+			int pMyPortNumber, int pTimeout, StoreState pState) {
 		super();
 		id = pId;
 		description = pDescription;
@@ -92,7 +94,8 @@ public class Store {
 		myPortNumber = pMyPortNumber;
 		timeout = pTimeout;
 		state = pState;
-		logEnabled = pLogEnabled;
+//		logEnabled = pLogEnabled;
+//		logFile = pLogFile;
 	}
 
 	/**
@@ -124,6 +127,21 @@ public class Store {
 	public void setDescription(String pDescription) {
 		description = pDescription;
 	}
+
+//	/**
+//	 * @return the log file
+//	 */
+//	public String getLogFile() {
+//		return logFile;
+//	}
+//
+//	/**
+//	 * @param pLogFile
+//	 *            the log file to set
+//	 */
+//	public void setLogFile(String pLogFile) {
+//		logFile = pLogFile;
+//	}
 
 	/**
 	 * @return the ip
@@ -200,20 +218,20 @@ public class Store {
 		state = pState;
 	}
 
-	/**
-	 * @return the log enabling
-	 */
-	public boolean getLogEnabled() {
-		return logEnabled;
-	}
-
-	/**
-	 * @param pLogEnabled
-	 *            the log enabling set
-	 */
-	public void setLogEnabled(boolean pLogEnabled) {
-		logEnabled = pLogEnabled;
-	}
+//	/**
+//	 * @return the log enabling
+//	 */
+//	public boolean getLogEnabled() {
+//		return logEnabled;
+//	}
+//
+//	/**
+//	 * @param pLogEnabled
+//	 *            the log enabling set
+//	 */
+//	public void setLogEnabled(boolean pLogEnabled) {
+//		logEnabled = pLogEnabled;
+//	}
 
 	/**
 	 * A brief description of this store.
@@ -235,6 +253,7 @@ public class Store {
 		retVal += "\n\tIP: " + ip + " - PORT: " + portNumber + " - MY_PORT: "
 				+ myPortNumber;
 		retVal += "\n\tTIMEOUT: " + timeout + " - STATE: " + state;
+		//retVal += (logFile != null && !logFile.equals("")) ? ("\n\tLOG FILE: " + logFile) : "";
 		return retVal;
 	}
 }

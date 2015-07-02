@@ -1,0 +1,16 @@
+#!/bin/bash
+# This script zips STS logs and delete old historical files
+MYPID=$$
+MYPATH="$(cd "$(dirname "$0")" && pwd)"
+MYREALPATH="$(dirname "$(readlink -f "$0")")"
+MYDATETIME=`date +%Y%m%d.%H%M%S.%N`
+STSLOGPATH="/home/sts/log"
+mkdir $STSLOGPATH/history >/dev/null 2>&1
+ZIPFILE="$STSLOGPATH/history/"`uname -n`".$MYDATETIME.log.zip"
+zip $ZIPFILE $STSLOGPATH/*.log >/dev/null 2>&1
+for file in $STSLOGPATH/*.log; do
+	if [ -f "$file" ]; then
+		echo "NEW LOG CREATED - $MYDATETIME" >$file 2>&1
+	fi
+done
+find "$STSLOGPATH/history" -type f -mtime +30 -exec rm {} \;
