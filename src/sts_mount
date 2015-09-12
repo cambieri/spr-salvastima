@@ -1,0 +1,6 @@
+#!/bin/bash
+# This script mounts SALVAGNINI directory in /home/sts/salvagnini for STS (only for debug purpose)
+MYPID=$$
+MYPATH="$(cd "$(dirname "$0")" && pwd)"
+MYREALPATH="$(dirname "$(readlink -f "$0")")"
+sudo mount -t cifs //128.1.101.103/sw_interface /home/sts/salvagnini -o username=syscon,password=Enterprise,rw,uid=1000,gid=1001,dir_mode=0777,file_mode=0777

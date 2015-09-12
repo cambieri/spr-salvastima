@@ -17,5 +17,6 @@
 		positionsyn="pos_01.syn"
 		downfile="down01.syn" 
 		sharedfolder="/home/sts/shared"
+		tomsharedfolder="/home/tom/shared"
 	/>
 </it.cambieri.sts>

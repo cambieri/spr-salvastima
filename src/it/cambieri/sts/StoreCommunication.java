@@ -101,8 +101,8 @@ public class StoreCommunication extends Observable implements Observer {
 	 */
 	public void sendMessage(int index, String[] pStringsToSend) {
 		if (connectionStarted) {
-			if (Integer.parseInt(pStringsToSend[0]) == Store.PING_0
-					|| Integer.parseInt(pStringsToSend[0]) == Store.PING_1) {
+			if (Integer.parseInt(pStringsToSend[5]) == Store.PING_0
+					|| Integer.parseInt(pStringsToSend[5]) == Store.PING_1) {
 				if (index != lastPingIndex) {
 					writeLog("StoreCommunication - INFORMATION: trying to send a PING, INDEX = "
 							+ index);
@@ -111,7 +111,10 @@ public class StoreCommunication extends Observable implements Observer {
 				
 			} else {
 				writeLog("StoreCommunication - INFORMATION: trying to send a command with MAT = "
-						+ pStringsToSend[0] + ", INDEX = " + index);
+						+ pStringsToSend[0] + " " 
+						+ pStringsToSend[1] + "x" 
+						+ pStringsToSend[2] + "x" 
+						+ pStringsToSend[3] + ", INDEX = " + index);
 			}
 			storeEvents.sendMessage(index, pStringsToSend);
 		} else {
@@ -129,13 +132,14 @@ public class StoreCommunication extends Observable implements Observer {
 			pingValue = (pingValue == Store.PING_0) ? Store.PING_1
 					: Store.PING_0;
 			String[] stringsToSend = new String[Store.TX_PACKET_LENGTH / 2];
-			stringsToSend[0] = pingValue.toString();
-			stringsToSend[1] = pingValue.toString();
-			stringsToSend[2] = pingValue.toString();
-			stringsToSend[3] = pingValue.toString();
-			stringsToSend[4] = pingValue.toString();
+			stringsToSend[0] = "0"; //pingValue.toString();
+			stringsToSend[1] = "0"; //pingValue.toString();
+			stringsToSend[2] = "0"; //pingValue.toString();
+			stringsToSend[3] = "0"; //pingValue.toString();
+			stringsToSend[4] = "0"; //pingValue.toString();
 			stringsToSend[5] = pingValue.toString();
-			stringsToSend[6] = pingValue.toString();
+			//---VC stringsToSend[6] = pingValue.toString();
+			stringsToSend[6] = "0";	//---VC
 			sendMessage(index, stringsToSend);
 		} else {
 			writeLog("PlcCommunication - WARNING: tried to send a ping() on a connection not started yet.");

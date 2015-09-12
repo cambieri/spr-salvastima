@@ -23,9 +23,9 @@ public class Store {
 	public static final short TX_LUN = 2;
 	public static final short TX_LAR = 4;
 	public static final short TX_SPE = 6;
-	public static final short TX_SPARE_1 = 8;
-	public static final short TX_SPARE_2 = 10;
-	public static final short TX_SPARE_3 = 12;
+	public static final short TX_JOB = 8;
+	public static final short TX_PING = 10;
+	public static final short TX_IS_TOM = 12;
 	public static final short TX_INDEX = 14;
 
 	public static final short RX_PACKET_LENGTH = 34; // in bytes

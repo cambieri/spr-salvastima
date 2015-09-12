@@ -44,6 +44,7 @@ import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 public class Main implements Observer {
 
 	public static final short MAX_LOGS_NUMBER = 1000;
+	private final int MAX_IC = 10000;
 	private Store store = null;
 	private StoreCommunication communication;
 	//private List<String> logs = null;
@@ -55,6 +56,7 @@ public class Main implements Observer {
 	private String user;
 	private String password;
 	private int index;
+	private int timeout;
 	private StoreMessage rxMessage;
 	private boolean ackReceived;
 	private boolean nakReceived;
@@ -66,7 +68,8 @@ public class Main implements Observer {
 	private String positionSyn;
 	private String downFile;
 	//private String logFile;
-	private String sharedFolder; 
+	private String sharedFolder;
+	private String tomSharedFolder; 
 	private int lastJustReceivedIndex = -1;
 
 	/**
@@ -85,6 +88,7 @@ public class Main implements Observer {
 				System.err.println("\n*** FATAL ERROR: Configuration file settings.xml not found!\n");
 				System.exit(1);
 			}
+			deleteFile(getSocketFileName());
 			writeLog("Main - INFO: Object created");
 			writeLog(store.toStringExtended() + "\n\tDIRECTORY: " + directory);
 		} catch (Exception e) {
@@ -116,7 +120,7 @@ public class Main implements Observer {
 			String myStorePlcIp = myStore.getAttributes().getNamedItem("plcip").getNodeValue();
 			int myStorePlcPort = Integer.parseInt(myStore.getAttributes().getNamedItem("plcport").getNodeValue());
 			int myStoreMyPort = Integer.parseInt(myStore.getAttributes().getNamedItem("myport").getNodeValue());
-			int timeout = Integer.parseInt(myStore.getAttributes().getNamedItem("timeout").getNodeValue());
+			timeout = Integer.parseInt(myStore.getAttributes().getNamedItem("timeout").getNodeValue());
 			directory = (myStore.getAttributes().getNamedItem("directory").getNodeValue());
 			domain = (myStore.getAttributes().getNamedItem("domain").getNodeValue());
 			user = (myStore.getAttributes().getNamedItem("user").getNodeValue());
@@ -130,6 +134,7 @@ public class Main implements Observer {
 			downFile = (myStore.getAttributes().getNamedItem("downfile").getNodeValue());
 			//logFile = (myStore.getAttributes().getNamedItem("logfile").getNodeValue());
 			sharedFolder = (myStore.getAttributes().getNamedItem("sharedfolder").getNodeValue());
+			tomSharedFolder = (myStore.getAttributes().getNamedItem("tomsharedfolder").getNodeValue());
 			if (store == null) {
 				store = new Store(myStoreId, myStoreDescription, myStorePlcIp,
 						myStorePlcPort, myStoreMyPort, timeout,
@@ -161,11 +166,24 @@ public class Main implements Observer {
 			communication.addObserver(this);
 			index = 0;
 			try {
+				File mySocketFile = new File(getSocketFileName());
+				mySocketFile.createNewFile();									
+			} catch (Exception e) {									
+			}
+			while (isTomWorking()) {
+				try {
+					Thread.sleep(100);
+				} catch (Exception e) {
+				}
+			}
+			try {
 				communication.start(index);
 			} catch (SocketException e) {
+				deleteFile(getSocketFileName());
 				System.err.println("FATAL ERROR: Application already started");
 				System.exit(1);
 			}
+			deleteFile(getSocketFileName());
 		}
 		return "Store Initialized...";
 	}
@@ -311,6 +329,28 @@ public class Main implements Observer {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private String getSocketFileName() {
+		return sharedFolder + "/CMBSOCKET";
+	}
+	
+	private String getTomSocketFileName() {
+		return (tomSharedFolder != null && !"".equals(tomSharedFolder.trim())) ? tomSharedFolder + "/CMBSOCKET" : ""; 
+	}
+	
+	private boolean isTomWorking()
+	{
+		boolean ret = false;
+		String myTomFileName = getTomSocketFileName();
+		if(!"".equals(myTomFileName)) {
+			ret = isFileExisting(myTomFileName);
+			if (ret) {
+				File myFile = new File(myTomFileName);
+				ret = (System.currentTimeMillis() - myFile.lastModified() < 120 * 1000);							
+			}
+		}
+		return ret;
 	}
 	
 	@SuppressWarnings("unused")
@@ -469,6 +509,11 @@ public class Main implements Observer {
 							pathName = directory + "/" + requestFile;
 							//File f_ini = new File(pathName);
 							if (isFileExisting(pathName)) {
+								try {
+									File mySocketFile = new File(getSocketFileName());
+									mySocketFile.createNewFile();									
+								} catch (Exception e) {									
+								}								
 								//FileInputStream is = new FileInputStream(f_ini);
 								InputStream is = getInputStream(pathName);
 								Properties p = new Properties();
@@ -493,10 +538,13 @@ public class Main implements Observer {
 									pStringsToSend[3] = zdim.toString();
 									ackReceived = false;
 									nakReceived = false;
-									index = (index < 32000) ? index + 1 : 1;
+									index = (index < MAX_IC) ? index + 1 : 1;
+									while(isTomWorking()) {
+										sleep(100);
+									}
 									communication.sendMessage(index, pStringsToSend);
 									writeLog("Main.index = " + index);
-									sleep(2000);
+									sleep(timeout);
 									if (!ackReceived && !nakReceived) {
 										writeLog("*** Timeout! (NAK forced)\n");
 										nakReceived = true;
@@ -512,16 +560,19 @@ public class Main implements Observer {
 								deleteFile(directory + "/" + requestFile);
 								//f_syn.delete();
 								deleteFile(directory + "/" + requestSyn);
+								deleteFile(getSocketFileName());
 							}
 						} else if (!downFile.equals("")) {
 							//String downPathName = directory + "/" + downFile;
 							//File f_down = new File(downPathName);
 							boolean richiestaDown = isFileExisting(directory + "/" + downFile);
 							if (richiestaDown) {
+								deleteFile(getSocketFileName());
 								writeLog("\n\n***\nSTS stopped by user!\n***\n");
 								System.exit(0);								
 							}							
 						} else if (isFileExisting(sharedFolder + "/STSCLOSE")) {
+							deleteFile(getSocketFileName());
 							writeLog("\n\n***\nSTS closed!\n***\n");
 							System.exit(0);															
 						}
@@ -610,9 +661,25 @@ public class Main implements Observer {
 	}
 
 	public void ping() throws RemoteException {
-		index = (index < 32000) ? index + 1 : 1;
+		try {
+			File mySocketFile = new File(getSocketFileName());
+			mySocketFile.createNewFile();									
+		} catch (Exception e) {									
+		}								
+		index = (index < MAX_IC) ? index + 1 : 1;
 		writeLog("Main - INFO: Command ping required with INDEX = " + index);
+		while (isTomWorking()) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+			}			
+		}
 		communication.ping(index);
+		try {
+			Thread.sleep(timeout);
+		} catch (InterruptedException e) {
+		}
+		deleteFile(getSocketFileName());
 	}
 
 //	public void printLogs() {
@@ -659,7 +726,7 @@ public class Main implements Observer {
 			writeLog("Indexes don't match; expected: " + index + ", received: "
 					+ justReceivedIndex);
 		}
-		communication.ping(index);
+		//---VC communication.ping(index);
 	}
 
 	/**
